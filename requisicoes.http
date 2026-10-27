@@ -1,0 +1,86 @@
+# Requisições de teste (extensão REST Client ou Thunder Client do VS Code).
+# Rode o script database/db_vendas.sql antes, para começar com os dados de teste.
+
+@base = http://localhost:3000
+
+### ---------- VENDEDORES ----------
+
+### Cadastrar vendedor (teste 9)
+POST {{base}}/vendedores
+Content-Type: application/json
+
+{ "nome": "Gabriela Alves", "meta_mensal": 7000, "percentual_base": 5 }
+
+### Listar vendedores
+GET {{base}}/vendedores
+
+### Consultar vendedor por código
+GET {{base}}/vendedores/1
+
+### Consultar vendedor inexistente (404)
+GET {{base}}/vendedores/999
+
+### Atualizar meta mensal e percentual base (teste 12)
+PUT {{base}}/vendedores/2
+Content-Type: application/json
+
+{ "meta_mensal": 7000, "percentual_base": 4 }
+
+### Desativar vendedor
+PATCH {{base}}/vendedores/7/desativar
+
+### ---------- VENDAS ----------
+
+### Registrar venda com comissão correta (teste 9)
+# R$ 2.000 PJ no Norte com base 5% => 5 + 3 + 1 = 9% => R$ 180,00
+POST {{base}}/vendas
+Content-Type: application/json
+
+{ "id_vendedor": 1, "id_regiao": 1, "valor_venda": 2000, "tipo_cliente": "PJ", "data_venda": "2026-10-26 10:00:00" }
+
+### Venda com código duplicado (teste 10) -> 409
+POST {{base}}/vendas
+Content-Type: application/json
+
+{ "id_venda": 1, "id_vendedor": 1, "id_regiao": 1, "valor_venda": 500, "tipo_cliente": "PF" }
+
+### Venda para vendedor inexistente (teste 11) -> 404
+POST {{base}}/vendas
+Content-Type: application/json
+
+{ "id_vendedor": 999, "id_regiao": 1, "valor_venda": 500, "tipo_cliente": "PF" }
+
+### Venda para vendedor inativo (teste 11) -> 400
+POST {{base}}/vendas
+Content-Type: application/json
+
+{ "id_vendedor": 6, "id_regiao": 1, "valor_venda": 500, "tipo_cliente": "PF" }
+
+### Venda com valor negativo -> 400
+POST {{base}}/vendas
+Content-Type: application/json
+
+{ "id_vendedor": 1, "id_regiao": 1, "valor_venda": -10, "tipo_cliente": "PF" }
+
+### Listar vendas
+GET {{base}}/vendas
+
+### Vendas por vendedor (teste 13)
+GET {{base}}/vendas/vendedor/3
+
+### Vendas por região (teste 13)
+GET {{base}}/vendas/regiao/4
+
+### Excluir venda
+DELETE {{base}}/vendas/16
+
+### Excluir venda inexistente -> 404
+DELETE {{base}}/vendas/999
+
+### ---------- RELATÓRIO ----------
+
+### Relatório mensal com atingimento de metas (teste 14)
+GET {{base}}/relatorios/performance?inicio=2026-10-01&fim=2026-10-31
+
+### Relatório com datas inválidas -> 400
+GET {{base}}/relatorios/performance?inicio=01/10/2026&fim=2026-10-31
